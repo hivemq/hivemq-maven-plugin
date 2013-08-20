@@ -175,4 +175,32 @@
             </plugin>
         </plugins>
     </build>
+
+    <distributionManagement>
+        <repository>
+            <id>repository.hivemq.com</id>
+            <name>HiveMQ Repository</name>
+            <url>http://repository.hivemq.com:8081/nexus/content/repositories/releases/</url>
+        </repository>
+
+        <snapshotRepository>
+            <id>repository.hivemq.com</id>
+            <name>HiveMQ Snapshot Repository</name>
+            <url>http://repository.hivemq.com:8081/nexus/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>repository.hivemq.com</id>
+            <name>HiveMQ Repository</name>
+            <url>http://repository.hivemq.com:8081/nexus/content/groups/public/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 </project>
