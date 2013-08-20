@@ -1,0 +1,115 @@
+= HiveMQ Maven Plugin - User Guide
+Christian Götz
+v1, 2013-08-20
+
+== Usage as Maven Profile
+
+[source,xml]
+.HiveMQ Maven plugin embedded as Maven profile
+----
+<profiles>
+    <profile>
+        <id>RunWithHiveMQ</id>
+        <build>
+            <plugins>
+                <plugin>
+                    <groupId>com.dcsquare</groupId>
+                    <artifactId>hivemq-maven-plugin</artifactId>
+                    <version>1.0.0</version>
+                    <executions>
+                        <execution>
+                            <id>hivemq</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>hivemq</goal>
+                            </goals>
+                            <configuration>
+                                <hiveMQDir>
+                                       <1>
+                                </hiveMQDir>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </build>
+    </profile>
+</profiles>
+----
+<1> Insert HiveMQ home directory
+
+== Configuration Options
+
+[cols="1m,1,1,1,2" options="header"]
+|===
+
+|Name
+|Type
+|Required
+|Default
+|Description
+
+|hiveMQDir
+|String
+|true
+|
+|Directory of the HiveMQ Jar-file
+
+|pluginJarName
+|String
+|false
+|{artifact-id}-{version}.jar
+|Name of the plugin jar
+
+|pluginDirectory
+|String
+|false
+|target
+|Name of the directory, where the plugin jar is located
+
+|verbose
+|boolean
+|false
+|true
+|HiveMQ logging to standard output enabled
+
+|noPlugins
+|boolean
+|false
+|false
+|Should plugins be loaded, false for plugins are loaded, true for plugins are not loaded
+
+|debugMode
+|String
+|false
+|SERVER
+|Mode of the debugger: CLIENT, SERVER, NONE
+
+|debugServerHostName
+|String
+|false
+|localhost
+|Used in CLIENT debugMode
+
+|debugPort
+|String
+|false
+|5005
+|Port on which HiveMQ in debug mode and IDE connect
+
+|hivemqJar
+|String
+|false
+|hivemq.jar
+|Name of the HiveMQ Jar-file
+
+|===
+
+== Debug Modes
+
+=== Client Mode
+HiveMQ is the debugging client, so a debugging server has to be opened already, for example by an IDE.
+
+=== Server Mode
+HiveMQ is the debugging server, an IDE debugger can be connected after HiveMQ is started.
+
