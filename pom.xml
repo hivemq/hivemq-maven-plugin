@@ -212,7 +212,7 @@
 
     <ciManagement>
         <system>travis</system>
-        <url>https://travis-ci.org/hivemq/hivemq-spi</url>
+        <url>https://travis-ci.org/hivemq/hivemq-maven-plugin</url>
     </ciManagement>
 
 
