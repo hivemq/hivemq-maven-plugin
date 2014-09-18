@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package com.dcsquare;
+package com.hivemq.maven;
 
 
 import com.google.common.annotations.VisibleForTesting;
