@@ -75,7 +75,7 @@ public class HiveMQMojoTest {
 
         final File debugFolder = new File(tempFolder, "debug");
 
-        assertThat(tempPluginFolder).isPresent().contains("-Dplugin.folder=" + debugFolder.getAbsolutePath());
+        assertThat(tempPluginFolder).isPresent().contains("-Dhivemq.plugin.folder=" + debugFolder.getAbsolutePath());
 
         assertEquals(1, debugFolder.list().length);
     }

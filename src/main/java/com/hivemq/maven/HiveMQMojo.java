@@ -272,7 +272,7 @@ public class HiveMQMojo extends AbstractMojo {
                 }
             }
 
-            return Optional.of("-Dplugin.folder=" + debugFolder.getAbsolutePath());
+            return Optional.of("-Dhivemq.plugin.folder=" + debugFolder.getAbsolutePath());
         }
         return Optional.absent();
     }
