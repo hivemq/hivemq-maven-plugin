@@ -190,6 +190,7 @@ public class HiveMQMojo extends AbstractMojo {
 
         }
         commands.add("-Dhivemq.home=" + hiveMQDir.getAbsolutePath());
+        commands.add("-noverify");
         commands.add("-jar");
         commands.add(hivemqJarFile.getAbsolutePath());
 
