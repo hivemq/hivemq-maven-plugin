@@ -92,6 +92,18 @@ public class HiveMQMojo extends AbstractMojo {
 
         final Process hivemqProcess = startHiveMQ(commands);
 
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            @Override
+            public void run() {
+                log.info("Stopping HiveMQ");
+
+                hivemqProcess.destroy();
+            }
+        }
+
+
+        ));
+
         try {
             if (verbose) {
                 showProcessOutputs(hivemqProcess);
