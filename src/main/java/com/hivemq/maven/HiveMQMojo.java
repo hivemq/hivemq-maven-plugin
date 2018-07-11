@@ -34,8 +34,10 @@ import org.stringtemplate.v4.ST;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static java.lang.String.*;
 
 /**
  * @author Christian Götz
@@ -74,6 +76,8 @@ public class HiveMQMojo extends AbstractMojo {
     File hiveMQDir;
     @Parameter(defaultValue = "hivemq.jar", property = "hivemqJar", required = true)
     String hivemqJar;
+    @Parameter
+    Map<String, String> systemPropertyVariables;
 
     /**
      * {@inheritDoc}
@@ -189,12 +193,27 @@ public class HiveMQMojo extends AbstractMojo {
             commands.add(debugFolder.get());
 
         }
+        commands.addAll(getSystemProperties());
         commands.add("-Dhivemq.home=" + hiveMQDir.getAbsolutePath());
         commands.add("-noverify");
         commands.add("-jar");
         commands.add(hivemqJarFile.getAbsolutePath());
 
         return commands;
+    }
+
+    /**
+     * @return a list of systemproperty strings matching "-D%key%=%value%
+     */
+    @VisibleForTesting
+    List<String> getSystemProperties() {
+        final List<String> systemProperties = newArrayList();
+        if (systemPropertyVariables != null) {
+            for (Map.Entry<String, String> systemPropertyEntry : systemPropertyVariables.entrySet()) {
+                systemProperties.add(format("-D%s=%s", systemPropertyEntry.getKey() , systemPropertyEntry.getValue()));
+            }
+        }
+        return systemProperties;
     }
 
     /**

@@ -33,6 +33,10 @@ This maven plugin simplifies the development of HiveMQ plugins as it provides a 
                                 <hiveMQDir>
                                        <1>
                                 </hiveMQDir>
+                                <systemPropertyVariables>
+                                    <!-- -DdiagnosticMode=true -->
+                                    <diagnosticMode>true</diagnosticMode>
+                                </systemPropertyVariables>
                             </configuration>
                         </execution>
                     </executions>
@@ -108,6 +112,12 @@ This maven plugin simplifies the development of HiveMQ plugins as it provides a 
 |false
 |hivemq.jar
 |Name of the HiveMQ Jar-file
+
+|systemPropertyVariables
+|String
+|false
+|
+|List of system properties propagated to HiveMQ on startup
 
 |===
 

@@ -24,8 +24,11 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
+import java.util.List;
 
+import static com.google.common.collect.Maps.newHashMap;
 import static org.assertj.guava.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -78,6 +81,23 @@ public class HiveMQMojoTest {
         assertThat(tempPluginFolder).isPresent().contains("-Dhivemq.plugin.folder=" + debugFolder.getAbsolutePath());
 
         assertEquals(1, debugFolder.list().length);
+    }
+
+    @Test
+    public void should_build_correct_systemproperty_string(){
+        //Given
+        final HiveMQMojo hiveMQMojo = new HiveMQMojo();
+        hiveMQMojo.systemPropertyVariables = newHashMap();
+
+        //When
+        hiveMQMojo.systemPropertyVariables.put("foo", "1");
+        hiveMQMojo.systemPropertyVariables.put("bar", "2");
+        final List<String> systemProperties = hiveMQMojo.getSystemProperties();
+
+        //Then
+        assertEquals(2, systemProperties.size());
+        assertTrue(systemProperties.contains("-Dfoo=1"));
+        assertTrue(systemProperties.contains("-Dbar=2"));
     }
 
     @Test
