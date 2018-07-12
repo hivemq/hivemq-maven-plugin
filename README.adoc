@@ -42,7 +42,7 @@ This maven plugin simplifies the development of HiveMQ plugins as it provides a 
                                     <com.sun.management.jmxremote.ssl>false</com.sun.management.jmxremote.ssl>
                                 </systemPropertyVariables>
                                 <additionalPluginFiles>
-                                    <additionalPluginFile>../hivemq/plugins/hivemq-jmx-metrics-plugin-3.1.0.jar</additionalPluginFile>
+                                    <additionalPluginFile><1>/plugins/hivemq-jmx-metrics-plugin-3.1.0.jar</additionalPluginFile>
                                 </additionalPluginFiles>
                                 <!-- /activate jmx -->
                             </configuration>
