@@ -24,6 +24,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import static com.google.common.collect.Maps.newHashMap;
@@ -123,4 +124,31 @@ public class HiveMQMojoTest {
         hiveMQMojo.getHiveMQJarFile(file);
     }
 
+    @Test
+    public void test_should_not_copy_files_when_additionalPluginFiles_is_null()
+            throws MojoExecutionException, IOException {
+        final File[] files = null;
+        int filesExpected = 0;
+
+        assertCopyAdditionalPluginFiles(files, filesExpected);
+    }
+
+    @Test
+    public void test_should_copy_additionalPluginFiles() throws MojoExecutionException, IOException {
+        final File[] files = new File[] { temporaryFolder.newFile(), temporaryFolder.newFile() };
+        int filesExpected = 2;
+
+        assertCopyAdditionalPluginFiles(files, filesExpected);
+    }
+
+    private void assertCopyAdditionalPluginFiles(final File[] files, final int filesExpected)
+            throws IOException, MojoExecutionException {
+        final File tempFolder = temporaryFolder.newFolder();
+
+        final HiveMQMojo hiveMQMojo = new HiveMQMojo();
+        hiveMQMojo.additionalPluginFiles = files;
+        hiveMQMojo.copyAdditionalPluginFiles(tempFolder);
+
+        assertEquals(filesExpected, tempFolder.list().length);
+    }
 }

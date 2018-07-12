@@ -16,9 +16,14 @@
 
 package com.hivemq.maven;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static java.lang.String.format;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -31,13 +36,8 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.impl.StaticLoggerBinder;
 import org.stringtemplate.v4.ST;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
-import static com.google.common.collect.Lists.newArrayList;
-import static java.lang.String.*;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 
 /**
  * @author Christian Götz
@@ -78,6 +78,8 @@ public class HiveMQMojo extends AbstractMojo {
     String hivemqJar;
     @Parameter
     Map<String, String> systemPropertyVariables;
+    @Parameter
+    File[] additionalPluginFiles;
 
     /**
      * {@inheritDoc}
@@ -304,9 +306,32 @@ public class HiveMQMojo extends AbstractMojo {
                 }
             }
 
+            /*
+             * Copies additionalPlugins to debugFolder
+             */
+            copyAdditionalPluginFiles(debugFolder);
+
             return Optional.of("-Dhivemq.plugin.folder=" + debugFolder.getAbsolutePath());
         }
         return Optional.absent();
+    }
+
+    @VisibleForTesting
+    void copyAdditionalPluginFiles(final File debugFolder) throws MojoExecutionException {
+        if (debugFolder == null) {
+            return;
+        }
+
+        if (additionalPluginFiles != null) {
+            for (File additionalPluginFile : additionalPluginFiles) {
+                try {
+                    FileUtils.copyFile(additionalPluginFile, new File(debugFolder, additionalPluginFile.getName()));
+                    log.debug("Copied additionalPluginFile {} to debugFolder", additionalPluginFile);
+                } catch (IOException e) {
+                    throw new MojoExecutionException("Error while copying plugin to debug folder", e);
+                }
+            }
+        }
     }
 
 }

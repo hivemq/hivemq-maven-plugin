@@ -33,10 +33,18 @@ This maven plugin simplifies the development of HiveMQ plugins as it provides a 
                                 <hiveMQDir>
                                        <1>
                                 </hiveMQDir>
+                                <!-- e.g. activate jmx -->
                                 <systemPropertyVariables>
-                                    <!-- -DdiagnosticMode=true -->
-                                    <diagnosticMode>true</diagnosticMode>
+                                    <com.sun.management.jmxremote/>
+                                    <com.sun.management.jmxremote.port>9010</com.sun.management.jmxremote.port>
+                                    <com.sun.management.jmxremote.local.only>false</com.sun.management.jmxremote.local.only>
+                                    <com.sun.management.jmxremote.authenticate>false</com.sun.management.jmxremote.authenticate>
+                                    <com.sun.management.jmxremote.ssl>false</com.sun.management.jmxremote.ssl>
                                 </systemPropertyVariables>
+                                <additionalPluginFiles>
+                                    <additionalPluginFile>../hivemq/plugins/hivemq-jmx-metrics-plugin-3.1.0.jar</additionalPluginFile>
+                                </additionalPluginFiles>
+                                <!-- /activate jmx -->
                             </configuration>
                         </execution>
                     </executions>
@@ -118,6 +126,12 @@ This maven plugin simplifies the development of HiveMQ plugins as it provides a 
 |false
 |
 |List of system properties propagated to HiveMQ on startup
+
+|additionalPluginFiles
+|File
+|false
+|
+|List of additional hivemq plugin files used by HiveMQ
 
 |===
 
