@@ -33,14 +33,11 @@ This maven plugin simplifies the development of HiveMQ plugins as it provides a 
                                 <hiveMQDir>
                                        <1>
                                 </hiveMQDir>
-                                <!-- e.g. activate jmx -->
+                                
                                 <systemPropertyVariables>
-                                    <com.sun.management.jmxremote/>
-                                    <com.sun.management.jmxremote.port>9010</com.sun.management.jmxremote.port>
-                                    <com.sun.management.jmxremote.local.only>false</com.sun.management.jmxremote.local.only>
-                                    <com.sun.management.jmxremote.authenticate>false</com.sun.management.jmxremote.authenticate>
-                                    <com.sun.management.jmxremote.ssl>false</com.sun.management.jmxremote.ssl>
+                                    <foo>bar</foo>
                                 </systemPropertyVariables>
+                                <!-- e.g. activate jmx -->
                                 <additionalPluginFiles>
                                     <additionalPluginFile><hiveMQDir>/plugins/hivemq-jmx-metrics-plugin-3.1.0.jar</additionalPluginFile>
                                 </additionalPluginFiles>
