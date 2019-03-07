@@ -16,20 +16,25 @@
 
 package com.hivemq.maven;
 
-import com.google.common.base.Optional;
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.model.ZipParameters;
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
+import java.util.Optional;
 
-import static org.assertj.guava.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  * @author Dominik Obermaier
+ * @author Abdullah Imal
  */
 public class HiveMQMojoTest {
 
@@ -52,30 +57,37 @@ public class HiveMQMojoTest {
     }
 
     @Test
-    public void test_plugin_folder_without_plugins() throws Exception {
+    public void test_extension_folder_without_extensions() throws Exception {
         final HiveMQMojo hiveMQMojo = new HiveMQMojo();
-        hiveMQMojo.noPlugins = true;
+        hiveMQMojo.noExtensions = true;
 
-        final Optional<String> tempPluginFolder = hiveMQMojo.createTempPluginFolder();
-
-        assertThat(tempPluginFolder).isAbsent();
+        final Optional<String> extensionFolder = hiveMQMojo.createExtensionFolder();
+        assertTrue(extensionFolder.isEmpty());
     }
 
     @Test
-    public void test_create_plugin_folder() throws Exception {
+    public void test_create_extension_folder() throws Exception {
         final File tempFolder = temporaryFolder.newFolder();
-        final File file = new File(tempFolder, "myjar.jar");
-        file.createNewFile();
-        final HiveMQMojo hiveMQMojo = new HiveMQMojo();
-        hiveMQMojo.noPlugins = false;
-        hiveMQMojo.pluginDirectory = tempFolder;
-        hiveMQMojo.pluginJarName = file.getName();
 
-        final Optional<String> tempPluginFolder = hiveMQMojo.createTempPluginFolder();
+        final InputStream inputStream = new ByteArrayInputStream("test content".getBytes());
+        final File testTxt = new File(tempFolder, "test.txt");
+        FileUtils.copyToFile(inputStream, testTxt);
+        final File extensionZipFile = new File(tempFolder, "myextension.zip");
+
+        final ZipFile zipFile = new ZipFile(extensionZipFile.getAbsolutePath());
+        zipFile.createZipFile(testTxt, new ZipParameters());
+
+        final HiveMQMojo hiveMQMojo = new HiveMQMojo();
+        hiveMQMojo.noExtensions = false;
+        hiveMQMojo.extensionDirectory = tempFolder;
+        hiveMQMojo.extensionZipName = extensionZipFile.getName();
+
+        final Optional<String> extensionFolder = hiveMQMojo.createExtensionFolder();
 
         final File debugFolder = new File(tempFolder, "debug");
 
-        assertThat(tempPluginFolder).isPresent().contains("-Dhivemq.plugin.folder=" + debugFolder.getAbsolutePath());
+        assertTrue(extensionFolder.isPresent());
+        assertEquals("-Dhivemq.extensions.folder=" + debugFolder.getAbsolutePath(), extensionFolder.get());
 
         assertEquals(1, debugFolder.list().length);
     }
@@ -102,5 +114,4 @@ public class HiveMQMojoTest {
 
         hiveMQMojo.getHiveMQJarFile(file);
     }
-
 }
