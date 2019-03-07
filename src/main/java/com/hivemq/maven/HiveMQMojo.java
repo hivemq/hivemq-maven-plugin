@@ -16,9 +16,8 @@
 
 package com.hivemq.maven;
 
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -26,6 +25,8 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.TestOnly;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.impl.StaticLoggerBinder;
@@ -33,13 +34,17 @@ import org.stringtemplate.v4.ST;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-
-import static com.google.common.collect.Lists.newArrayList;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Christian Götz
  * @author Dominik Obermaier
+ * @author Abdullah Imal
  */
 @Mojo(name = "hivemq", defaultPhase = LifecyclePhase.PACKAGE)
 public class HiveMQMojo extends AbstractMojo {
@@ -56,20 +61,20 @@ public class HiveMQMojo extends AbstractMojo {
     String version;
     @Parameter(defaultValue = "${basedir}", required = true, readonly = true)
     String baseDir;
-    @Parameter(property = "pluginJarName", required = false)
-    String pluginJarName;
+    @Parameter(property = "extensionZipName", required = false)
+    String extensionZipName;
     @Parameter(defaultValue = "true", property = "verbose", required = true)
     boolean verbose;
-    @Parameter(defaultValue = "false", property = "noPlugins", required = true)
-    boolean noPlugins;
+    @Parameter(defaultValue = "false", property = "noExtensions", required = true)
+    boolean noExtensions;
     @Parameter(defaultValue = DEBUG_MODE_SERVER, property = "debugMode", required = true)
     String debugMode;
     @Parameter(defaultValue = "5005", property = "debugPort", required = true)
     String debugPort;
     @Parameter(defaultValue = "localhost", property = "debugServerHostName", required = true)
     String debugServerHostName;
-    @Parameter(defaultValue = "${project.build.directory}", property = "pluginDir", required = true)
-    File pluginDirectory;
+    @Parameter(defaultValue = "${project.build.directory}", property = "extensionDir", required = true)
+    File extensionDirectory;
     @Parameter(property = "hivemqDir", required = true)
     File hiveMQDir;
     @Parameter(defaultValue = "hivemq.jar", property = "hivemqJar", required = true)
@@ -91,18 +96,24 @@ public class HiveMQMojo extends AbstractMojo {
         final List<String> commands = assembleCommand();
 
         final Process hivemqProcess = startHiveMQ(commands);
-
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            @Override
-            public void run() {
-                log.info("Stopping HiveMQ");
-
-                hivemqProcess.destroy();
-            }
+        if (!hivemqProcess.isAlive()) {
+            throw new MojoFailureException("HiveMQ process could not be started!");
         }
 
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            log.info("Stopping HiveMQ process.");
+            hivemqProcess.destroy();
 
-        ));
+            final CompletableFuture<Process> processCompletableFuture = hivemqProcess.onExit();
+            while (!processCompletableFuture.isDone()) {
+                log.info("Waiting for HiveMQ to stop.");
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    log.error("An interruptedException occurred while waiting for HiveMQ to stop!");
+                }
+            }
+        }));
 
         try {
             if (verbose) {
@@ -110,7 +121,7 @@ public class HiveMQMojo extends AbstractMojo {
             }
             hivemqProcess.waitFor();
         } catch (InterruptedException e) {
-            throw new MojoFailureException("A interruptedException was thrown");
+            throw new MojoFailureException("An interruptedException was thrown while HiveMQ was running!");
         }
     }
 
@@ -118,17 +129,16 @@ public class HiveMQMojo extends AbstractMojo {
      * Attaches a Console Reader to the running process which outputs the logs of HiveMQ
      *
      * @param hivemqProcess the process of the HiveMQ server
-     * @throws InterruptedException
      */
-    private void showProcessOutputs(final Process hivemqProcess) throws InterruptedException {
+    private void showProcessOutputs(@NotNull final Process hivemqProcess) {
         final ConsoleReader reader = new ConsoleReader(hivemqProcess.getInputStream());
-        reader.join();
+        Executors.newSingleThreadExecutor().submit(reader);
     }
 
     /**
-     * Checks for preconditions of the given paramters and throws exceptions if the conditions are not satisfied
+     * Checks for preconditions of the given parameters.
      *
-     * @throws MojoExecutionException
+     * @throws MojoExecutionException Will be thrown when the conditions are not satisfied.
      */
     private void checkPreconditions() throws MojoExecutionException {
 
@@ -145,18 +155,18 @@ public class HiveMQMojo extends AbstractMojo {
      * @return the running HiveMQ process
      * @throws MojoExecutionException if the execution of HiveMQ did not work
      */
-    private Process startHiveMQ(final List<String> commandParameters) throws MojoExecutionException {
+    private Process startHiveMQ(@NotNull final List<String> commandParameters) throws MojoExecutionException {
         final ProcessBuilder processBuilder = new ProcessBuilder(commandParameters);
 
         processBuilder.directory(hiveMQDir);
         processBuilder.redirectErrorStream(true);
 
-        Process p;
+        final Process p;
         try {
             p = processBuilder.start();
         } catch (IOException e) {
-            log.error("An error occured while starting HiveMQ:", e);
-            throw new MojoExecutionException("An error occured while starting HiveMQ", e);
+            log.error("An error occurred while starting HiveMQ:", e);
+            throw new MojoExecutionException("An error occurred while starting HiveMQ!", e);
         }
         return p;
     }
@@ -172,7 +182,7 @@ public class HiveMQMojo extends AbstractMojo {
 
         final File hivemqJarFile = getHiveMQJarFile(hivemqBinDir);
 
-        final List<String> commands = newArrayList();
+        final List<String> commands = new ArrayList<>();
 
         commands.add("java");
 
@@ -184,15 +194,15 @@ public class HiveMQMojo extends AbstractMojo {
             commands.add(DEBUG_PARAMETER_SERVER.render());
         }
 
-        final Optional<String> debugFolder = createTempPluginFolder();
-        if (debugFolder.isPresent()) {
-            commands.add(debugFolder.get());
+        final Optional<String> debugFolder = createExtensionFolder();
+        debugFolder.ifPresent(commands::add);
 
-        }
         commands.add("-Dhivemq.home=" + hiveMQDir.getAbsolutePath());
         commands.add("-noverify");
         commands.add("-jar");
         commands.add(hivemqJarFile.getAbsolutePath());
+
+        log.info("Used commands: " + commands);
 
         return commands;
     }
@@ -204,11 +214,11 @@ public class HiveMQMojo extends AbstractMojo {
      * @return the HiveMQ executable jar file
      * @throws MojoExecutionException if the jar file does not exist
      */
-    @VisibleForTesting
-    File getHiveMQJarFile(final File hivemqBinDir) throws MojoExecutionException {
+    @TestOnly
+    File getHiveMQJarFile(@NotNull final File hivemqBinDir) throws MojoExecutionException {
         final File hivemqJarFile = new File(hivemqBinDir, hivemqJar);
         if (!hivemqJarFile.exists()) {
-            throw new MojoExecutionException("HiveMQ Jar file " + hivemqJarFile.getAbsolutePath() + " does not exist");
+            throw new MojoExecutionException("HiveMQ Jar file " + hivemqJarFile.getAbsolutePath() + " does not exist!");
         }
         log.debug("HiveMQ jar file is located at {}", hivemqJarFile.getAbsolutePath());
         return hivemqJarFile;
@@ -220,7 +230,7 @@ public class HiveMQMojo extends AbstractMojo {
      * @return the bin directory of HiveMQ
      * @throws MojoExecutionException if the directory does not exist or it is no directory
      */
-    @VisibleForTesting
+    @TestOnly
     File getHiveMQBinDir() throws MojoExecutionException {
         final File hivemqBinDir = new File(hiveMQDir, "bin");
         log.debug("HiveMQ bin directory is located at {}", hivemqBinDir.getAbsolutePath());
@@ -232,63 +242,45 @@ public class HiveMQMojo extends AbstractMojo {
     }
 
     /**
-     * Creates the debug folder where the packaged plugin is copied to
+     * Creates the debug folder where the packaged extension is unzipped to
      *
-     * @return a {@link Optional} which can contain the parameter of the HiveMQ plugin folder
+     * @return a {@link Optional} which can contain the parameter of the HiveMQ extension folder
      */
-    @VisibleForTesting
-    Optional<String> createTempPluginFolder() throws MojoExecutionException {
-        File debugFolder;
-        if (!noPlugins) {
-            if (pluginJarName == null) {
-                pluginJarName = artifactId + "-" + version + ".jar";
-            }
-
-            debugFolder = new File(pluginDirectory, "debug");
-
-            if (debugFolder.exists()) {
-                try {
-                    FileUtils.deleteDirectory(debugFolder);
-                } catch (IOException e) {
-                    throw new MojoExecutionException("An error occured while deleting " + debugFolder.getAbsolutePath(), e);
-                }
-            }
-
-            final boolean mkdirsSuccessful = debugFolder.mkdirs();
-            if (!mkdirsSuccessful) {
-                throw new MojoExecutionException("Could not create " + debugFolder.getAbsolutePath());
-            }
-
-            try {
-                FileUtils.copyFile(new File(pluginDirectory, pluginJarName), new File(debugFolder, pluginJarName));
-            } catch (IOException e) {
-                throw new MojoExecutionException("Error while copying plugin to debug folder", e);
-            }
-
-            final File resourcesDir = new File(baseDir + File.separator + "src" + File.separator + "main" + File.separator + "resources");
-
-            if (resourcesDir.exists()) {
-
-                String[] propertyFiles = resourcesDir.list();
-
-                if (propertyFiles != null && propertyFiles.length > 0) {
-                    for (String propertyFile : propertyFiles) {
-                        try {
-                            final File file = new File(resourcesDir, propertyFile);
-                            if (file.isFile()) {
-                                FileUtils.copyFile(file, new File(debugFolder, propertyFile));
-                            }
-                        } catch (IOException e) {
-                            throw new MojoExecutionException("Error while copying property file to debug folder", e);
-                        }
-                    }
-                }
-            }
-
-            return Optional.of("-Dhivemq.plugin.folder=" + debugFolder.getAbsolutePath());
+    @TestOnly
+    Optional<String> createExtensionFolder() throws MojoExecutionException {
+        if (noExtensions) {
+            return Optional.empty();
         }
-        return Optional.absent();
+
+        if (extensionZipName == null) {
+            extensionZipName = artifactId + "-" + version + "-distribution.zip";
+        }
+        final File extensionZipFile = new File(extensionDirectory, extensionZipName);
+        if (!extensionZipFile.exists()) {
+            throw new MojoExecutionException("Could not find extension zip file " + extensionZipFile.getAbsolutePath());
+        }
+
+        final File debugFolder = new File(extensionDirectory, "debug");
+        if (debugFolder.exists()) {
+            try {
+                FileUtils.deleteDirectory(debugFolder);
+            } catch (IOException e) {
+                throw new MojoExecutionException("An error occurred while deleting " + debugFolder.getAbsolutePath(), e);
+            }
+        }
+
+        final boolean mkdirsSuccessful = debugFolder.mkdirs();
+        if (!mkdirsSuccessful) {
+            throw new MojoExecutionException("Could not create " + debugFolder.getAbsolutePath());
+        }
+
+        try {
+            final ZipFile zipFile = new ZipFile(extensionZipFile.getAbsolutePath());
+            zipFile.extractAll(debugFolder.getAbsolutePath());
+        } catch (ZipException e) {
+            throw new MojoExecutionException("Error while copying extension to debug folder", e);
+        }
+
+        return Optional.of("-Dhivemq.extensions.folder=" + debugFolder.getAbsolutePath());
     }
-
 }
-

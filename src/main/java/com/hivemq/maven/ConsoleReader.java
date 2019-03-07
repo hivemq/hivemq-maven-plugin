@@ -16,6 +16,7 @@
 
 package com.hivemq.maven;
 
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,10 +24,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Christian Götz
  * @author Dominik Obermaier
+ * @author Abdullah Imal
  */
 public class ConsoleReader extends Thread {
 
@@ -34,22 +37,26 @@ public class ConsoleReader extends Thread {
 
     private InputStream inputStream;
 
-    public ConsoleReader(final InputStream inputStream) {
+    ConsoleReader(@NotNull final InputStream inputStream) {
         this.inputStream = inputStream;
-        start();
     }
 
     @Override
     public void run() {
-        String line;
-        try {
-            final BufferedReader b = new BufferedReader(new InputStreamReader(inputStream));
-            while ((line = b.readLine()) != null) {
-
-                log.info(line);
+        try (final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+            while (true) {
+                if (reader.ready()) {
+                    log.info(reader.readLine());
+                } else {
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(100);
+                    } catch (InterruptedException e) {
+                        log.error("An interruptedException occurred while reading the console!", e);
+                    }
+                }
             }
         } catch (IOException e) {
-            log.error("An exception occured while reading the console", e);
+            log.error("An exception occurred while reading the console", e);
         }
     }
 }
