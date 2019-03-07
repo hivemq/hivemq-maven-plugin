@@ -197,12 +197,18 @@ public class HiveMQMojo extends AbstractMojo {
         final Optional<String> debugFolder = createExtensionFolder();
         debugFolder.ifPresent(commands::add);
 
+        commands.add("-Djava.net.preferIPv4Stack=true");
         commands.add("-Dhivemq.home=" + hiveMQDir.getAbsolutePath());
         commands.add("-noverify");
+
+        commands.add("--add-opens"); commands.add("java.base/java.lang=ALL-UNNAMED");
+        commands.add("--add-opens"); commands.add("java.base/java.nio=ALL-UNNAMED");
+        commands.add("--add-opens"); commands.add("java.base/sun.nio.ch=ALL-UNNAMED");
+        commands.add("--add-opens"); commands.add("jdk.management/com.sun.management.internal=ALL-UNNAMED");
+        commands.add("--add-exports"); commands.add("java.base/jdk.internal.misc=ALL-UNNAMED");
+
         commands.add("-jar");
         commands.add(hivemqJarFile.getAbsolutePath());
-
-        log.info("Used commands: " + commands);
 
         return commands;
     }
