@@ -57,7 +57,7 @@ This maven plugin simplifies the development of HiveMQ extensions as it provides
 |Default
 |Description
 
-|hiveMQDir
+|hivemqDir
 |String
 |true
 |
