@@ -19,6 +19,7 @@ package com.hivemq.maven;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.SystemUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -184,7 +185,28 @@ public class HiveMQMojo extends AbstractMojo {
 
         final List<String> commands = new ArrayList<>();
 
-        commands.add("java");
+        final String javaHome = System.getProperty("java.home");
+        String customJavaCommand = null;
+        if (javaHome != null && !javaHome.isEmpty() && javaHome.trim().length() > 0) {
+            if (SystemUtils.IS_OS_WINDOWS) {
+                final File javaExe = new File(new File(javaHome), "\\bin\\java.exe");
+                if (javaExe.exists()) {
+                    customJavaCommand = javaExe.getAbsolutePath();
+                }
+            } else if (SystemUtils.IS_OS_UNIX) {
+                final File javaBin = new File(new File(javaHome), "/bin/java");
+                if (javaBin.exists()) {
+                    customJavaCommand = javaBin.getAbsolutePath();
+
+                }
+            }
+        }
+        if (customJavaCommand == null) {
+            commands.add("java");
+        } else {
+            commands.add(customJavaCommand);
+        }
+
 
         if (DEBUG_MODE_CLIENT.equals(debugMode)) {
             DEBUG_PARAMETER_CLIENT.add("port", debugPort).add("host", debugServerHostName);
@@ -201,11 +223,16 @@ public class HiveMQMojo extends AbstractMojo {
         commands.add("-Dhivemq.home=" + hiveMQDir.getAbsolutePath());
         commands.add("-noverify");
 
-        commands.add("--add-opens"); commands.add("java.base/java.lang=ALL-UNNAMED");
-        commands.add("--add-opens"); commands.add("java.base/java.nio=ALL-UNNAMED");
-        commands.add("--add-opens"); commands.add("java.base/sun.nio.ch=ALL-UNNAMED");
-        commands.add("--add-opens"); commands.add("jdk.management/com.sun.management.internal=ALL-UNNAMED");
-        commands.add("--add-exports"); commands.add("java.base/jdk.internal.misc=ALL-UNNAMED");
+        commands.add("--add-opens");
+        commands.add("java.base/java.lang=ALL-UNNAMED");
+        commands.add("--add-opens");
+        commands.add("java.base/java.nio=ALL-UNNAMED");
+        commands.add("--add-opens");
+        commands.add("java.base/sun.nio.ch=ALL-UNNAMED");
+        commands.add("--add-opens");
+        commands.add("jdk.management/com.sun.management.internal=ALL-UNNAMED");
+        commands.add("--add-exports");
+        commands.add("java.base/jdk.internal.misc=ALL-UNNAMED");
 
         commands.add("-jar");
         commands.add(hivemqJarFile.getAbsolutePath());
@@ -289,4 +316,5 @@ public class HiveMQMojo extends AbstractMojo {
 
         return Optional.of("-Dhivemq.extensions.folder=" + debugFolder.getAbsolutePath());
     }
+
 }

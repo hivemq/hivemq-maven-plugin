@@ -62,7 +62,7 @@ public class HiveMQMojoTest {
         hiveMQMojo.noExtensions = true;
 
         final Optional<String> extensionFolder = hiveMQMojo.createExtensionFolder();
-        assertTrue(extensionFolder.isEmpty());
+        assertFalse(extensionFolder.isPresent());
     }
 
     @Test

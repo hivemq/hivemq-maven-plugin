@@ -20,7 +20,7 @@
 
     <groupId>com.hivemq</groupId>
     <artifactId>hivemq-maven-plugin</artifactId>
-    <version>4.0.0</version>
+    <version>4.0.1</version>
     <packaging>maven-plugin</packaging>
 
     <name>HiveMQ Maven Plugin</name>
@@ -118,6 +118,11 @@
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -127,8 +132,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.0</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>10</source>
+                    <target>10</target>
                 </configuration>
             </plugin>
             <plugin>
