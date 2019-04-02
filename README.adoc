@@ -21,7 +21,7 @@ This maven plugin simplifies the development of HiveMQ extensions as it provides
                 <plugin>
                     <groupId>com.hivemq</groupId>
                     <artifactId>hivemq-maven-plugin</artifactId>
-                    <version>4.0.0</version>
+                    <version>4.0.1</version>
                     <executions>
                         <execution>
                             <id>hivemq</id>
