@@ -122,3 +122,12 @@ HiveMQ is the debugging client, so a debugging server has to be opened already, 
 === Server Mode
 
 HiveMQ is the debugging server, an IDE debugger can be connected after HiveMQ is started.
+
+= Contributing
+
+If you want to contribute to HiveMQ Maven Plugin, see the link:CONTRIBUTING.md[contribution guidelines].
+
+= License
+
+HiveMQ Maven Plugin is licensed under the `APACHE LICENSE, VERSION 2.0`. A copy of the license can be found link:LICENSE.txt[here].
+
