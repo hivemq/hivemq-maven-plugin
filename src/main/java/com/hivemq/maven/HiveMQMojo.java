@@ -80,8 +80,8 @@ public class HiveMQMojo extends AbstractMojo {
     File hiveMQDir;
     @Parameter(defaultValue = "hivemq.jar", property = "hivemqJar", required = true)
     String hivemqJar;
-    @Parameter(property = "includedResource")
-    File includedResource;
+    @Parameter(property = "includeResources")
+    File includeResources;
 
     /**
      * {@inheritDoc}
@@ -318,8 +318,8 @@ public class HiveMQMojo extends AbstractMojo {
 
 
         try {
-            if (includedResource != null) {
-                FileUtils.copyDirectory(includedResource, new File(debugFolder.getAbsolutePath() + File.separator + artifactId + File.separator + includedResource.getName()));
+            if (includeResources != null) {
+                FileUtils.copyDirectory(includeResources, new File(debugFolder.getAbsolutePath() + File.separator + artifactId + File.separator + includeResources.getName()));
             }
         } catch (Exception e) {
             throw new MojoExecutionException("Error while copying resource to debug folder", e);
