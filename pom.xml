@@ -20,7 +20,7 @@
 
     <groupId>com.hivemq</groupId>
     <artifactId>hivemq-maven-plugin</artifactId>
-    <version>4.0.1</version>
+    <version>4.0.2-SNAPPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>HiveMQ Maven Plugin</name>

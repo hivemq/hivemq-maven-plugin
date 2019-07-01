@@ -19,6 +19,7 @@ package com.hivemq.maven;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -81,6 +82,11 @@ public class HiveMQMojoTest {
         hiveMQMojo.noExtensions = false;
         hiveMQMojo.extensionDirectory = tempFolder;
         hiveMQMojo.extensionZipName = extensionZipFile.getName();
+        final File includedResource = new File(tempFolder, "/driver/sql");
+        includedResource.getParentFile().mkdirs();
+        includedResource.createNewFile();
+        hiveMQMojo.includedResource = includedResource.getParentFile();
+
 
         final Optional<String> extensionFolder = hiveMQMojo.createExtensionFolder();
 
@@ -89,7 +95,7 @@ public class HiveMQMojoTest {
         assertTrue(extensionFolder.isPresent());
         assertEquals("-Dhivemq.extensions.folder=" + debugFolder.getAbsolutePath(), extensionFolder.get());
 
-        assertEquals(1, debugFolder.list().length);
+        assertEquals(2, debugFolder.list().length);
     }
 
     @Test
