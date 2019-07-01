@@ -109,6 +109,11 @@ This maven plugin simplifies the development of HiveMQ extensions as it provides
 |hivemq.jar
 |Name of the HiveMQ Jar-file
 
+|includeResources
+|String
+|false
+|
+|Path to a folder that will be included into the extension folder
 |===
 
 
