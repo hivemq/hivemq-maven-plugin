@@ -27,7 +27,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.TestOnly;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.impl.StaticLoggerBinder;
@@ -36,6 +35,7 @@ import org.stringtemplate.v4.ST;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -82,12 +82,13 @@ public class HiveMQMojo extends AbstractMojo {
     String hivemqJar;
     @Parameter(property = "includeResources")
     File includeResources;
+    @Parameter(property = "nodes", defaultValue = "0")
+    int clusterNodeCount = 0;
+    @Parameter(defaultValue = "false", property = "clusterLog")
+    boolean clusterLog = false;
 
     /**
      * {@inheritDoc}
-     *
-     * @throws MojoExecutionException
-     * @throws MojoFailureException
      */
     public void execute() throws MojoExecutionException, MojoFailureException {
 
@@ -98,6 +99,67 @@ public class HiveMQMojo extends AbstractMojo {
 
         final List<String> commands = assembleCommand();
 
+        if (clusterNodeCount == 0) {
+            final Process hivemqProcess = getProcess(commands);
+            try {
+                if (verbose) {
+                    showProcessOutputs(hivemqProcess);
+                }
+                hivemqProcess.waitFor();
+            } catch (InterruptedException e) {
+                throw new MojoFailureException("An interruptedException was thrown while HiveMQ was running!");
+            }
+        } else {
+            try {
+                final int[] ports = ConfigUtil.getPorts(clusterNodeCount);
+                final File[] nodeFolders = HiveMQDirUtil.generateNodeFolders(extensionDirectory, hiveMQDir, ports);
+                final Process[] processes = new Process[clusterNodeCount];
+
+                for (int i = 0; i < clusterNodeCount; i++) {
+                    final ArrayList<String> nodeCommands = new ArrayList<>();
+                    final List<String> head = commands.subList(0, 4);
+                    final List<String> tail = commands.subList(4, commands.size());
+                    nodeCommands.addAll(head);
+                    nodeCommands.add("-Dhivemq.data.folder=" + new File(nodeFolders[i], "data").getAbsolutePath());
+                    nodeCommands.add("-Dhivemq.config.folder=" + new File(nodeFolders[i], "conf").getAbsolutePath());
+                    nodeCommands.add("-Dhivemq.log.folder=" + new File(nodeFolders[i], "log").getAbsolutePath());
+                    nodeCommands.addAll(tail);
+                    if (i != 0) {
+                        nodeCommands.remove(1);
+                    }
+                    processes[i] = getProcess(nodeCommands);
+                }
+
+                log.info("Started HiveMQ processes: {}.", Arrays.toString(processes));
+                try {
+                    if (verbose) {
+                        if (clusterLog) {
+                            for (final Process process : processes) {
+                                showProcessOutputs(process);
+                            }
+                        } else {
+                            showProcessOutputs(processes[0]);
+                        }
+                    }
+                    processes[0].waitFor();
+                } catch (InterruptedException e) {
+                    throw new MojoFailureException("An interruptedException was thrown while HiveMQ was running!");
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    /**
+     * @param commands Construct and start a HiveMQ process.
+     * @return a running HiveMQ process.
+     * @throws MojoFailureException   if the HiveMQ process terminates.
+     * @throws MojoExecutionException if the execution of HiveMQ did not work
+     */
+    private @NotNull Process getProcess(List<String> commands) throws MojoFailureException, MojoExecutionException {
         final Process hivemqProcess = startHiveMQ(commands);
         if (!hivemqProcess.isAlive()) {
             throw new MojoFailureException("HiveMQ process could not be started!");
@@ -117,15 +179,7 @@ public class HiveMQMojo extends AbstractMojo {
                 }
             }
         }));
-
-        try {
-            if (verbose) {
-                showProcessOutputs(hivemqProcess);
-            }
-            hivemqProcess.waitFor();
-        } catch (InterruptedException e) {
-            throw new MojoFailureException("An interruptedException was thrown while HiveMQ was running!");
-        }
+        return hivemqProcess;
     }
 
     /**
@@ -181,9 +235,9 @@ public class HiveMQMojo extends AbstractMojo {
      */
     private List<String> assembleCommand() throws MojoExecutionException {
 
-        final File hivemqBinDir = getHiveMQBinDir();
+        final File hivemqBinDir = HiveMQDirUtil.getHiveMQBinDir(hiveMQDir);
 
-        final File hivemqJarFile = getHiveMQJarFile(hivemqBinDir);
+        final File hivemqJarFile = HiveMQDirUtil.getHiveMQJarFile(hivemqJar, hivemqBinDir);
 
         final List<String> commands = new ArrayList<>();
 
@@ -242,46 +296,12 @@ public class HiveMQMojo extends AbstractMojo {
         return commands;
     }
 
-    /**
-     * Returns the HiveMQ executable jar file from the given directory if it exists.
-     *
-     * @param hivemqBinDir the directory where the HiveMQ jar file is located
-     * @return the HiveMQ executable jar file
-     * @throws MojoExecutionException if the jar file does not exist
-     */
-    @TestOnly
-    File getHiveMQJarFile(@NotNull final File hivemqBinDir) throws MojoExecutionException {
-        final File hivemqJarFile = new File(hivemqBinDir, hivemqJar);
-        if (!hivemqJarFile.exists()) {
-            throw new MojoExecutionException("HiveMQ Jar file " + hivemqJarFile.getAbsolutePath() + " does not exist!");
-        }
-        log.debug("HiveMQ jar file is located at {}", hivemqJarFile.getAbsolutePath());
-        return hivemqJarFile;
-    }
-
-    /**
-     * Returns the /bin directory of the HiveMQ directory if it exists and if it is a directory.
-     *
-     * @return the bin directory of HiveMQ
-     * @throws MojoExecutionException if the directory does not exist or it is no directory
-     */
-    @TestOnly
-    File getHiveMQBinDir() throws MojoExecutionException {
-        final File hivemqBinDir = new File(hiveMQDir, "bin");
-        log.debug("HiveMQ bin directory is located at {}", hivemqBinDir.getAbsolutePath());
-
-        if (!hivemqBinDir.isDirectory()) {
-            throw new MojoExecutionException(hivemqBinDir.getAbsolutePath() + " is not a directory!");
-        }
-        return hivemqBinDir;
-    }
 
     /**
      * Creates the debug folder where the packaged extension is unzipped to
      *
      * @return a {@link Optional} which can contain the parameter of the HiveMQ extension folder
      */
-    @TestOnly
     Optional<String> createExtensionFolder() throws MojoExecutionException {
         if (noExtensions) {
             return Optional.empty();
@@ -316,7 +336,6 @@ public class HiveMQMojo extends AbstractMojo {
             throw new MojoExecutionException("Error while copying extension to debug folder", e);
         }
 
-
         try {
             if (includeResources != null) {
                 FileUtils.copyDirectory(includeResources, new File(debugFolder.getAbsolutePath() + File.separator + artifactId + File.separator + includeResources.getName()));
@@ -326,5 +345,4 @@ public class HiveMQMojo extends AbstractMojo {
         }
         return Optional.of("-Dhivemq.extensions.folder=" + debugFolder.getAbsolutePath());
     }
-
 }

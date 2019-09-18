@@ -114,6 +114,18 @@ This maven plugin simplifies the development of HiveMQ extensions as it provides
 |false
 |
 |Path to a folder that will be included into the extension folder
+
+|clusterNodeCount
+|Integer
+|false
+|0
+|Cluster size of HiveMQ cluster. `0` disables clustering.
+
+|clusterLog
+|boolean
+|false
+|false
+|If enabled the logs from all cluster nodes will be displayed instead of just one.
 |===
 
 

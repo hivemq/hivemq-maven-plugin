@@ -105,7 +105,7 @@ public class HiveMQMojoTest {
         expectedException.expect(MojoExecutionException.class);
         expectedException.expectMessage("is not a directory");
 
-        hiveMQMojo.getHiveMQBinDir();
+        HiveMQDirUtil.getHiveMQBinDir(hiveMQMojo.hiveMQDir);
     }
 
     @Test
@@ -117,6 +117,6 @@ public class HiveMQMojoTest {
         expectedException.expect(MojoExecutionException.class);
         expectedException.expectMessage("does not exist");
 
-        hiveMQMojo.getHiveMQJarFile(file);
+        HiveMQDirUtil.getHiveMQJarFile(hiveMQMojo.hivemqJar, file);
     }
 }
