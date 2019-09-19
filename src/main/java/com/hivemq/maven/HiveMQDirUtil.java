@@ -110,11 +110,9 @@ public class HiveMQDirUtil {
             if (i == 0) {
                 final String cleanConfig = ConfigUtil.replaceClusterSection(hiveMQConf, ports, i);
                 FileUtils.write(nodeConfFile, cleanConfig, StandardCharsets.UTF_8);
-                log.info(cleanConfig);
             } else {
                 final String cleanConfig = ConfigUtil.cleanAndReplaceClusterSection(hiveMQConf, ports, i);
                 FileUtils.write(nodeConfFile, cleanConfig, StandardCharsets.UTF_8);
-                log.info(cleanConfig);
             }
         }
 

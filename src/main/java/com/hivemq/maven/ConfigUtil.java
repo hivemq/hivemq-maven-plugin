@@ -3,6 +3,8 @@ package com.hivemq.maven;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -16,6 +18,7 @@ import java.util.regex.Pattern;
  * @author Georg Held
  */
 public class ConfigUtil {
+    private static final @NotNull Logger log = LoggerFactory.getLogger(ConfigUtil.class);
 
     private static final @NotNull Function<MatchResult, String> commentOutMatch = (result) -> {
         final StringJoiner stringJoiner = new StringJoiner(" -->\n<!-- ", "<!-- ", " -->\n");
@@ -27,6 +30,7 @@ public class ConfigUtil {
         return stringJoiner.toString();
     };
 
+    private static final int portSectionGroup = 1;
     private static final @NotNull Pattern listenersPattern = Pattern.compile("<listeners>.+?(<port>.+?</port>).+?</listeners>", Pattern.DOTALL);
     private static final @NotNull Pattern clusterPattern = Pattern.compile("<cluster>.+?</cluster>", Pattern.DOTALL);
     private static final @NotNull Pattern controlCenterPattern = Pattern.compile("<control-center>.+?</control-center>", Pattern.DOTALL);
@@ -64,18 +68,18 @@ public class ConfigUtil {
      * @return the config with a replaced listener port.
      */
     public static @NotNull String replaceListenerPort(final @NotNull String hiveMQConfig) {
-        int groupPosition = 1;
-        final String portSection = String.format(portFormat, getPort());
         final Matcher matcher = listenersPattern.matcher(hiveMQConfig);
-        final StringBuffer sb = new StringBuffer();
+        final StringBuffer stringBuffer = new StringBuffer();
         while (matcher.find()) {
+            final String portSection = String.format(portFormat, getPort());
+            log.info("Replacing listener port {} with random generated port {}.", matcher.group(portSectionGroup), portSection);
             final StringBuilder stringBuilder = new StringBuilder(matcher.group());
-            stringBuilder.replace(matcher.start(groupPosition) - matcher.start(), matcher.end(groupPosition) - matcher.start(), portSection);
-            matcher.appendReplacement(sb, stringBuilder.toString());
+            stringBuilder.replace(matcher.start(portSectionGroup) - matcher.start(), matcher.end(portSectionGroup) - matcher.start(), portSection);
+            matcher.appendReplacement(stringBuffer, stringBuilder.toString());
         }
-        matcher.appendTail(sb);
+        matcher.appendTail(stringBuffer);
 
-        return sb.toString();
+        return stringBuffer.toString();
     }
 
     /**

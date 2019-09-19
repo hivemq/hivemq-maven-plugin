@@ -147,7 +147,7 @@ public class HiveMQMojo extends AbstractMojo {
                 }
 
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new MojoFailureException("Could not rewrite the HiveMQ config.xml {}.", e.getCause());
             }
 
         }
