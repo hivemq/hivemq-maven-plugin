@@ -114,6 +114,12 @@ This maven plugin simplifies the development of HiveMQ extensions as it provides
 |false
 |
 |Path to a folder that will be included into the extension folder
+
+|existExtensions
+|String
+|false
+|
+|Path to a folder that include extensions and will be included into the extension folder
 |===
 
 
