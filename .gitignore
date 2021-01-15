@@ -2,3 +2,7 @@
 .DS_Store
 /hivemq-maven-plugin.iml
 /.idea/
+.settings
+.project
+.classpath
+*.swp

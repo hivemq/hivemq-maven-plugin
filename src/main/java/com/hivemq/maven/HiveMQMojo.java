@@ -82,6 +82,8 @@ public class HiveMQMojo extends AbstractMojo {
     String hivemqJar;
     @Parameter(property = "includeResources")
     File includeResources;
+    @Parameter(property = "existExtensions")
+    File existExtensions;
 
     /**
      * {@inheritDoc}
@@ -307,6 +309,14 @@ public class HiveMQMojo extends AbstractMojo {
         final boolean mkdirsSuccessful = debugFolder.mkdirs();
         if (!mkdirsSuccessful) {
             throw new MojoExecutionException("Could not create " + debugFolder.getAbsolutePath());
+        }
+
+        try {
+            if (existExtensions != null) {
+                FileUtils.copyDirectory(existExtensions, new File(debugFolder.getAbsolutePath()));
+            }
+        } catch (Exception e) {
+            throw new MojoExecutionException("Error while copying exist extensions to debug folder", e);
         }
 
         try {
