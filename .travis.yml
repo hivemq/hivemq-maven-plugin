@@ -1,4 +1,16 @@
 language: java
 
+stages:
+  - test
+  - name: integration-test
+  - name: release
+    if: tag IS present AND branch = master
+
+jobs:
+  include:
+    - stage: test
+    - stage: release
+      script: mvn clean package -Dmaven.test.skip=true sign:sign deploy:deploy
+
 jdk:
   - openjdk11

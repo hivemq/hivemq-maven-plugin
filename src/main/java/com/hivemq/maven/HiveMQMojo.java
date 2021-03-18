@@ -86,8 +86,8 @@ public class HiveMQMojo extends AbstractMojo {
     /**
      * {@inheritDoc}
      *
-     * @throws MojoExecutionException
-     * @throws MojoFailureException
+     * @throws MojoExecutionException mojoExecutionException
+     * @throws MojoFailureException mojoFailureException
      */
     public void execute() throws MojoExecutionException, MojoFailureException {
 
