@@ -11,8 +11,9 @@ jobs:
   include:
     - stage: test
     - stage: release
-      script: mvn clean package -Dmaven.test.skip=true sign:sign deploy:deploy -B
-      on: branch = master
+      script: mvn clean package -Dmaven.test.skip=true sign:sign deploy -B
+      on:
+        branch: master
 
 jdk:
   - openjdk11
