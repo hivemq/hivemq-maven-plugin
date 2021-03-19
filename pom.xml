@@ -216,15 +216,14 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>repository.hivemq.com</id>
-            <name>HiveMQ Snapshot Repository</name>
-            <url>http://repository.hivemq.com:8081/nexus/content/repositories/snapshots/</url>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
 
     <ciManagement>
         <system>travis</system>
-        <url>https://travis-ci.org/hivemq/hivemq-maven-plugin</url>
+        <url>https://travis-ci.com/hivemq/hivemq-maven-plugin</url>
     </ciManagement>
 
     <scm>
