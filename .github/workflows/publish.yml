@@ -19,9 +19,10 @@ jobs:
           server-username: SONATYPE_USERNAME
           server-password: SONATYPE_PASSWORD
       - name: Publish to Maven Central
-        run: echo "$SONATYPE_USERNAME" | mvn clean package -Dmaven.test.skip=true sign:sign deploy -B -X
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SIGN_KEY: ${{ secrets.SIGN_KEY }}
           SIGN_KEY_PASS: ${{ secrets.SIGN_KEY_PASS }}
+        run: mvn clean package -Dmaven.test.skip=true sign:sign deploy -B
+
