@@ -20,6 +20,7 @@ jobs:
           server-password: SONATYPE_PASSWORD
       - name: Publish to Maven Central
         env:
+          TEST: test
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SIGN_KEY: ${{ secrets.SIGN_KEY }}
