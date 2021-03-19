@@ -1,8 +1,9 @@
 name: Publish to Maven Central
 
 on:
-  create:
-    tag: '*'
+  push:
+    branches:
+      - main
 
 jobs:
   build:
