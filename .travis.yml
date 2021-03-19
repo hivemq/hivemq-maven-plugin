@@ -4,7 +4,6 @@ install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -Dsign.skip=true
 
 stages:
   - test
-  - name: integration-test
   - name: release
     if: tag IS present AND branch = master
 
