@@ -69,7 +69,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <sonatype.server>https://s01.oss.sonatype.org/</sonatype.server>
+        <sonatype.server>https://oss.sonatype.org/</sonatype.server>
     </properties>
 
     <dependencies>
