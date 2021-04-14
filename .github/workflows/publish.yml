@@ -2,20 +2,20 @@ name: Publish to Maven Central
 
 on:
   release:
-    types:
-      - created
+    types: [published]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v2
-      - name: setup java
-        uses: actions/setup-java@v1
+      - name: Setup Java
+        uses: actions/setup-java@v2
         with:
-          java-version: "11"
-      - name: setup maven server
+          distribution: 'adopt'
+          java-version: '11'
+      - name: Setup Maven settings
         uses: s4u/maven-settings-action@v2.4.0
         with:
           servers: '[{"id": "ossrh", "username": "${{ secrets.SONATYPE_USERNAME }}", "password": "${{ secrets.SONATYPE_PASSWORD }}"}]'
@@ -23,5 +23,4 @@ jobs:
         env:
           SIGN_KEY: ${{ secrets.SIGN_KEY }}
           SIGN_KEY_PASS: ${{ secrets.SIGN_KEY_PASS }}
-        run: mvn clean package -Dmaven.test.skip=true sign:sign deploy -B
-
+        run: mvn clean package -Dmaven.test.skip=true sign:sign nexus-staging:deploy -B
