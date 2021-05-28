@@ -4,7 +4,7 @@ v2, 2019-03-07
 
 == HiveMQ Maven Plugin
 
-image:https://travis-ci.org/hivemq/hivemq-maven-plugin.png?branch=master["Build Status", link="https://travis-ci.org/hivemq/hivemq-maven-plugin"]
+image:https://github.com/hivemq/hivemq-maven-plugin/actions/workflows/check.yml/badge.svg?branch=master["Build Status", link=https://github.com/hivemq/hivemq-maven-plugin/actions/workflows/check.yml?query=branch%3Amaster]
 
 This maven plugin simplifies the development of HiveMQ extensions as it provides a simple way to execute your extension with HiveMQ.
 
